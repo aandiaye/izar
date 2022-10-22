@@ -1,0 +1,2 @@
+# Intall
+django == 4.0.3
