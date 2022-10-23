@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 db = SQLAlchemy()
@@ -17,6 +17,12 @@ class User(db.Model):
     email = db.Column(db.String)
     phone = db.Column(db.String)
     password = db.Column(db.String)
+
+    def set_password(self, secret):
+        self.password = generate_password_hash(secret)
+
+    def check_password(self, secret):
+        return check_password_hash(self.password, secret)
 
 
 @app.route("/users/create", methods=["GET", "POST"])
@@ -42,11 +48,43 @@ def user_create():
             return redirect(url_for('login'))
 
 
-@app.route('/')
-def login():
-    message = 'Welcome Back!'
-    return render_template('pages/login.html', message = message)
+@app.route('/home')
+def home():
+    if "user_id" in session:
+        user_id = session['user_id']
+        lastname = session['lastname']
+        email = session['login']
+        return render_template('pages/index.html', data=[user_id,lastname,email])
+    else:
+        return redirect(url_for('login'))
 
+
+@app.route("/", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        user = User.query.filter_by(email = request.form["email"]).first()
+        if user is not None:
+            if user.check_password(secret=request.form["password"]):
+                session['user_id'] = user.id
+                session['login'] = user.email
+                session['lastname'] = user.lastname
+                return redirect(url_for('home'))
+            else:
+                message="identifiant ou mot de passe incorrect"
+                return render_template('pages/login.html', message=message)
+        else :
+            message = "identifiant ou mot de passe incorrect"
+            return render_template('pages/login.html', message=message)
+    else :
+        message = "Authentification"
+        return render_template('pages/login.html', message=message)
+
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    session.pop('email', None)
+    session.pop('lastname', None)
+    return redirect(url_for('login'))
 
 @app.route('/register')
 def register():

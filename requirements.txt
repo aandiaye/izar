@@ -1,2 +1,3 @@
 # Intall
-django == 4.0.3
+Flask==2.2.2
+Flask-SQLAlchemy==3.0.2
