@@ -25,8 +25,8 @@ class User(db.Model):
         return check_password_hash(self.password, secret)
 
 
-@app.route("/users/create", methods=["GET", "POST"])
-def user_create():
+@app.route("/register", methods=["GET", "POST"])
+def register():
     if request.method == "POST":
         user_verify = db.session.execute(db.select(User).where(User.email == request.form["email"])).first()
         if user_verify is None:
@@ -39,13 +39,17 @@ def user_create():
                 password = password,)
             db.session.add(user)
             db.session.commit()
-            #TODO utiliser render template et rediriger vers login
+            #TODO voir pourquoi les messages flash ne s'affiche pas
             flash("You are registered and can now login", "success")
             return redirect(url_for('login'))
-        else :
-            # TODO utiliser render template et rediriger vers register
+        else:
             flash("user already existed, please login or contact admin", "danger")
             return redirect(url_for('login'))
+    else:
+        if 'user_id' in session:
+            return redirect(url_for('home'))
+        else:
+            return render_template('pages/register.html')
 
 
 @app.route('/home')
@@ -76,8 +80,11 @@ def login():
             message = "identifiant ou mot de passe incorrect"
             return render_template('pages/login.html', message=message)
     else :
-        message = "Authentification"
-        return render_template('pages/login.html', message=message)
+        if "user_id" in session:
+            return redirect(url_for('home'))
+        else:
+            message = "Authentification"
+            return render_template('pages/login.html', message=message)
 
 @app.route('/logout')
 def logout():
@@ -85,10 +92,6 @@ def logout():
     session.pop('email', None)
     session.pop('lastname', None)
     return redirect(url_for('login'))
-
-@app.route('/register')
-def register():
-    return render_template('pages/register.html')
 
 
 @app.errorhandler(404)
