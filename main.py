@@ -54,6 +54,7 @@ def register():
 
 @app.route('/home')
 def home():
+<<<<<<< HEAD
     if "user_id" in session:
         user_id = session['user_id']
         lastname = session['lastname']
@@ -97,6 +98,12 @@ def logout():
 @app.errorhandler(404)
 def page_not_found(error):
     return render_template('errors/404.html'), 404
+=======
+    return render_template('index.html')
+@app.route('/identification')
+def identification():
+    return render_template('identification.html')
+>>>>>>> main
 
 
 if __name__ == '__main__':
